@@ -1,14 +1,11 @@
 package app
 
 import (
-	"context"
-	"fmt"
 	"github.com/shultziv/ethstat/internal/config"
+	"github.com/shultziv/ethstat/internal/delivery/cmd"
 	"github.com/shultziv/ethstat/internal/repo/etherscan"
 	"github.com/shultziv/ethstat/internal/service/ethstat"
 )
-
-const lastCountBlocks = 100
 
 func EthStatCmdRun(etherScanConfig *config.EtherScan) (err error) {
 	proxyURLs, err := etherScanConfig.GetProxyURLs()
@@ -19,12 +16,7 @@ func EthStatCmdRun(etherScanConfig *config.EtherScan) (err error) {
 	etherScan := etherscan.New(proxyURLs...)
 	ethStat := ethstat.New(etherScan)
 
-	ctx := context.Background()
-	addrWithMaxChange, err := ethStat.GetAddrBiggestBalanceChange(ctx, lastCountBlocks)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(addrWithMaxChange)
+	cmdHandler := cmd.New(ethStat)
+	cmdHandler.Run()
 	return nil
 }

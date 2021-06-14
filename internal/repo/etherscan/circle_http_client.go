@@ -5,10 +5,6 @@ import (
 	"sync/atomic"
 )
 
-type httpClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
 // CircleHttpClient запускает внутренние клиенты по циклу
 type CircleHttpClient struct {
 	*http.Client

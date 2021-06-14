@@ -10,12 +10,18 @@ import (
 // Потокобезопасный
 type SleepHttpClient struct {
 	client *http.Client
-	ticker *time.Ticker
+
+	lastTimeReqCh chan time.Time // Буферезированный канала с емкостью 1, туда кладется время последнего запроса
+	sleep         time.Duration  // Кол-во времени которое необходимо подождать псле предидущего запроса
 }
 
 func NewSleepHCWithProxy(proxy *url.URL, sleep time.Duration, timeout time.Duration) *SleepHttpClient {
+	lastTimeReqCh := make(chan time.Time, 1)
+	lastTimeReqCh <- time.Now().Add(-sleep)
+
 	return &SleepHttpClient{
-		ticker: time.NewTicker(sleep),
+		lastTimeReqCh: lastTimeReqCh,
+		sleep:         sleep,
 		client: &http.Client{
 			Transport: &http.Transport{
 				Proxy: http.ProxyURL(proxy),
@@ -30,7 +36,12 @@ func NewSleepHC(sleep time.Duration, timeout time.Duration) *SleepHttpClient {
 }
 
 // Перед вызовом запросом выдерживает паузу
-func (srt *SleepHttpClient) Do(req *http.Request) (*http.Response, error) {
-	<-srt.ticker.C
-	return srt.client.Do(req)
+func (srt *SleepHttpClient) Do(req *http.Request) (response *http.Response, err error) {
+	lastTimeReq := <-srt.lastTimeReqCh
+	sleep := srt.sleep - time.Now().Sub(lastTimeReq) // Кол-во времени прошедшего после последнего запроса
+	time.Sleep(sleep)
+
+	response, err = srt.client.Do(req)
+	srt.lastTimeReqCh <- time.Now()
+	return
 }

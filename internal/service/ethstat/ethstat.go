@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+//go:generate mockgen -destination=mocks/mock_eth_repo.go -package=mocks . EthRepo
 type EthRepo interface {
 	GetLastBlockNumber(ctx context.Context) (blockNumber uint64, err error)
 	GetBlockInfo(ctx context.Context, blockNumber uint64) (blockInfo *domain.BlockInfo, err error)

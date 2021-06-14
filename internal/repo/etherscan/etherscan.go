@@ -29,6 +29,7 @@ func New(proxyUrls ...*url.URL) *EtherScan {
 		circleHC.AddHC(NewSleepHCWithProxy(proxyUrl, time.Duration(sleep)*time.Second, time.Duration(timeout)*time.Second))
 	}
 
+	// Если прокси нет, тогла создаем Sleep клиента но без прокси
 	if len(proxyUrls) == 0 {
 		circleHC.AddHC(NewSleepHC(time.Duration(sleep)*time.Second, time.Duration(timeout)*time.Second))
 	}
@@ -67,6 +68,7 @@ func (e *EtherScan) request(req *http.Request) (responseData []byte, err error) 
 	return body, nil
 }
 
+// Выдает номер последнего блока
 func (e *EtherScan) GetLastBlockNumber(ctx context.Context) (blockNumber uint64, err error) {
 	requestData := url.Values{
 		"module": {"proxy"},
@@ -100,6 +102,7 @@ func (e *EtherScan) GetLastBlockNumber(ctx context.Context) (blockNumber uint64,
 	return
 }
 
+// Выдает информацию о блоке по номеру
 func (e *EtherScan) GetBlockInfo(ctx context.Context, blockNumber uint64) (blockInfo *domain.BlockInfo, err error) {
 	requestData := url.Values{
 		"module":  {"proxy"},
@@ -137,6 +140,7 @@ func (e *EtherScan) GetBlockInfo(ctx context.Context, blockNumber uint64) (block
 	return blockInfoResponseData.Result, nil
 }
 
+// выдает информацию о блоках в диапозоне номеров
 func (e *EtherScan) GetBlocksInfoInRange(ctx context.Context, startBlockNumber uint64, endBlockNumber uint64) (blocksInfo []*domain.BlockInfo, err error) {
 	if startBlockNumber >= endBlockNumber {
 		return nil, &ErrInvalidRangeBlockNumbers{
